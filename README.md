@@ -4,6 +4,9 @@ JobFit AI is a Gradio app that reads a candidate CV, searches for relevant job l
 
 The app is designed for AI, data science, technical writing, technical content, curriculum, and developer education roles, but the preferences box can be changed for any job search.
 
+<img width="1496" height="855" alt="image" src="https://github.com/user-attachments/assets/b17eb09b-bdea-4af0-a639-7364aed1867c" />
+
+
 ## What It Does
 
 - Uploads and reads a CV PDF with `pypdf`.
