@@ -66,45 +66,4 @@ Upload a CV PDF, edit the job preferences if needed, then click **Generate JobFi
 
 Progress appears in the log box while the app runs. The generate button is disabled during a run to prevent duplicate requests.
 
-## Report Format
 
-The report asks the model to keep the output simple and practical:
-
-- no em dashes
-- no contractions
-- short bullets
-- clickable job links
-- at least 5 ranked jobs when enough usable results exist
-- rejected jobs with name, link, and reason
-
-The main sections are:
-
-- `Best Match`
-- `Ranked Jobs`
-- `Job Notes`
-- `Rejected Jobs`
-
-## Defaults
-
-- Kimi model: `kimi-k2.6`
-- Moonshot base URL: `https://api.moonshot.ai/v1`
-- Agent max turns: `25`
-- Search results per tool call: `10`
-- Page reads requested in the prompt: up to `3`
-- Scraped characters per page: `8000`
-
-## Notes
-
-The app uses Kimi 2.6 through Moonshot's OpenAI-compatible endpoint with the OpenAI Agents SDK:
-
-```python
-OpenAIChatCompletionsModel(
-    model="kimi-k2.6",
-    openai_client=AsyncOpenAI(
-        api_key=os.environ["MOONSHOT_API_KEY"],
-        base_url="https://api.moonshot.ai/v1",
-    ),
-)
-```
-
-Olostep is called directly with HTTP requests inside the agent tools.
