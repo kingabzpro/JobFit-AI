@@ -1,21 +1,20 @@
 # JobFit AI
 
-JobFit AI is a Gradio app that reads a candidate CV, searches for relevant job listings, scrapes selected pages with Olostep, and uses Kimi K2.6 to produce a ranked job-fit report with at least 5 job entries.
+JobFit AI is a Gradio app that reads a candidate CV, runs a Kimi 2.6 agent through the OpenAI Agents SDK, searches the web with Olostep, and produces a ranked Markdown job-fit report.
 
-The app is designed for AI, data science, technical writing, technical content, curriculum, and developer education roles, but the preferences box can be changed for any job search.
+The app is aimed at AI, data science, technical writing, technical content, curriculum, and developer education roles. The preferences box can be changed for other job searches.
 
 <img width="1496" height="855" alt="image" src="https://github.com/user-attachments/assets/b17eb09b-bdea-4af0-a639-7364aed1867c" />
 
-
 ## What It Does
 
-- Uploads and reads a CV PDF with `pypdf`.
-- Uses Kimi K2.6 to create a focused search query.
-- Calls Olostep Search for job sources.
-- Filters out broad search/category pages, keeping specific job listings from any source (aggregators, ATS platforms, company sites).
-- Skips unscrapeable domains (LinkedIn) before scraping.
-- Scrapes pages with Olostep Scrape.
-- Uses Kimi to rank the scraped jobs and write a Markdown report with at least 5 entries (unscraped listings are included as backup if needed).
+- Reads a CV PDF with `pypdf`.
+- Runs a Kimi 2.6 agent through the OpenAI Agents SDK.
+- Gives the agent two tools: `search_jobs` and `read_job_page`.
+- Uses Olostep Search to find job listings.
+- Uses Olostep Scrape to read selected job pages.
+- Streams simple progress logs for tool calls, parameters, and tool output sizes.
+- Generates a Markdown report with a best match, ranked jobs, job notes, and rejected jobs.
 
 ## Setup
 
@@ -55,42 +54,57 @@ http://127.0.0.1:7860
 
 Upload a CV PDF, edit the job preferences if needed, then click **Generate JobFit Report**.
 
-## Workflow
+## Current Workflow
 
-1. Read the CV.
-2. Ask Kimi for one concise search query.
-3. Search Olostep for job sources.
-4. Filter out broad search/category pages; keep specific job listings from any domain.
-5. If fewer than 8 results, retry once with a modified query.
-6. Ask Kimi to select at least 5 and up to 10 sources to scrape.
-7. Skip unscrapeable domains (LinkedIn).
-8. Scrape selected pages.
-9. Collect unscraped job listings as backup data.
-10. Ask Kimi to rank jobs and generate a report with at least 5 entries.
+1. Read the uploaded CV.
+2. Build one prompt from the CV and job preferences.
+3. Run the `JobFit AI` agent with Kimi 2.6.
+4. The agent searches for job listings with `search_jobs`.
+5. The agent reads selected listings with `read_job_page`.
+6. The agent writes the final Markdown report.
+7. The app displays the report in Gradio.
 
 Progress appears in the log box while the app runs. The generate button is disabled during a run to prevent duplicate requests.
 
-## Search Behavior
+## Report Format
 
-The app keeps results from any source — aggregators (Indeed, Glassdoor, ZipRecruiter), ATS platforms (Greenhouse, Lever, Ashby), and company careers pages — as long as the URL points to a **specific job listing**. Only broad search/category pages are filtered out.
+The report asks the model to keep the output simple and practical:
 
-Domains that block scrapers (currently LinkedIn) are accepted in search results but skipped during scraping.
+- no em dashes
+- no contractions
+- short bullets
+- clickable job links
+- at least 5 ranked jobs when enough usable results exist
+- rejected jobs with name, link, and reason
 
-Current defaults:
+The main sections are:
 
-- Search results per query: `20`
-- Maximum sources scraped: `10`
-- Minimum report entries: `5`
+- `Best Match`
+- `Ranked Jobs`
+- `Job Notes`
+- `Rejected Jobs`
+
+## Defaults
+
+- Kimi model: `kimi-k2.6`
+- Moonshot base URL: `https://api.moonshot.ai/v1`
+- Agent max turns: `25`
+- Search results per tool call: `10`
+- Page reads requested in the prompt: up to `3`
+- Scraped characters per page: `8000`
 
 ## Notes
 
-This project uses Kimi K2.6 through Moonshot's OpenAI-compatible endpoint:
+The app uses Kimi 2.6 through Moonshot's OpenAI-compatible endpoint with the OpenAI Agents SDK:
 
 ```python
-OpenAI(
-    api_key=os.getenv("MOONSHOT_API_KEY"),
-    base_url="https://api.moonshot.ai/v1",
+OpenAIChatCompletionsModel(
+    model="kimi-k2.6",
+    openai_client=AsyncOpenAI(
+        api_key=os.environ["MOONSHOT_API_KEY"],
+        base_url="https://api.moonshot.ai/v1",
+    ),
 )
 ```
 
-Olostep is called directly with HTTP requests rather than the Python SDK.
+Olostep is called directly with HTTP requests inside the agent tools.
